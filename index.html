@@ -24,10 +24,15 @@
 <body>
     <button id="startButton">マイクを有効化</button>
     <script>
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let audioContext;
         let microphone, analyser, dataArray;
 
         async function startListening() {
+
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 microphone = audioContext.createMediaStreamSource(stream);
