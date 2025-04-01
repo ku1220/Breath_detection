@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>息吹き検出アプリ</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+            background-color: white;
+            transition: background-color 0.3s;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <button id="startButton">マイクを有効化</button>
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let microphone, analyser, dataArray;
+
+        async function startListening() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                microphone = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                microphone.connect(analyser);
+                detectBlow();
+            } catch (err) {
+                console.error('マイクアクセスの許可が必要です:', err);
+            }
+        }
+
+        function detectBlow() {
+            analyser.getByteFrequencyData(dataArray);
+            const volume = dataArray.reduce((sum, value) => sum + value, 0) / dataArray.length;
+            
+            if (volume > 50) { // 息を吹きかけたと判定する閾値
+                document.body.style.backgroundColor = getRandomColor();
+            }
+            requestAnimationFrame(detectBlow);
+        }
+
+        function getRandomColor() {
+            return `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
+        }
+
+        document.getElementById('startButton').addEventListener('click', startListening);
+    </script>
+</body>
+</html>
